@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Partido {{ partido_id }}</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 700px;
+            margin: auto;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .acciones {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+        .mensaje {
+            text-align: center;
+            margin-top: 10px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Partido ID: {{ partido_id }}</h1>
+    <h2>Rival: {{ rival }} | Casa: {{ casa }}</h2>
+
+    <div class="acciones">
+        {% for columna in columnas %}
+        <button onclick="enviarAccion('{{ columna }}')">{{ columna.replace('_', ' ').capitalize() }}</button>
+        {% endfor %}
+    </div>
+
+    <div class="mensaje" id="mensaje"></div>
+
+    <script>
+        function enviarAccion(columna) {
+            fetch(`/partido/{{ partido_id }}/accion/${columna}`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (response.ok) {
+                    mostrarMensaje(`+1 en ${columna}`);
+                } else {
+                    mostrarMensaje('Error al actualizar', true);
+                }
+            });
+        }
+
+        function mostrarMensaje(texto, error = false) {
+            const mensajeDiv = document.getElementById('mensaje');
+            mensajeDiv.style.color = error ? 'red' : 'green';
+            mensajeDiv.innerText = texto;
+            setTimeout(() => {
+                mensajeDiv.innerText = '';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
