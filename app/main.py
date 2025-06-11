@@ -6,6 +6,9 @@ from app.database import SessionLocal
 from app.models import StatsTemporada
 import sqlalchemy
 from typing import Optional
+from matplotlib.figure import Figure
+import io
+import base64
 
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
@@ -61,3 +64,30 @@ def sumar_accion(partido_id: int, columna: str, db: Session = Depends(get_db)):
         setattr(partido, columna, valor + 1)
         db.commit()
     return {"ok": True}
+
+@app.get("/gols")
+def goles_temporada(request: Request, db: Session = Depends(get_db)):
+    partidos = db.query(StatsTemporada).order_by(StatsTemporada.id).all()
+    jornadas = list(range(1, len(partidos) + 1))
+    goles = [p.gol_favor for p in partidos]
+
+    # Crear figura
+    fig = Figure(figsize=(10, 4))
+    ax = fig.subplots()
+    ax.plot(jornadas, goles, marker='o', color='green')
+    ax.set_title("Evolución de Goles a Favor")
+    ax.set_xlabel("Jornada")
+    ax.set_ylabel("Goles")
+    ax.grid(True)
+
+    # Guardar imagen en base64
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png")
+    buf.seek(0)
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    buf.close()
+
+    return templates.TemplateResponse("gols.html", {
+        "request": request,
+        "image_base64": image_base64
+    })
