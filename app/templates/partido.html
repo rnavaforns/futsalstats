@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Partido {{ partido_id }}</title>
+    <title>Jornada {{ jornada }}</title>
     <style>
         body {
             font-family: sans-serif;
@@ -30,7 +30,7 @@
     </style>
 </head>
 <body>
-    <h1>Partido ID: {{ partido_id }}</h1>
+    <h1>Jornada: {{ jornada }}</h1>
     <h2>Rival: {{ rival }} | Casa: {{ casa }}</h2>
 
     <div class="acciones">
@@ -43,7 +43,7 @@
 
     <script>
         function enviarAccion(columna) {
-            fetch(`/partido/{{ partido_id }}/accion/${columna}`, {
+            fetch(`/partido/{{ jornada }}/accion/${columna}`, {
                 method: 'POST'
             })
             .then(response => {

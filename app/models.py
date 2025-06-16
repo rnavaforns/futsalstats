@@ -7,7 +7,8 @@ Base = declarative_base()
 class StatsTemporada(Base):
     __tablename__ = "stats_temporada"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    jornada = Column(Integer)
     gol_favor = Column(Integer, default=0)
     gol_contra = Column(Integer, default=0)
     xut_fora = Column(Integer, default=0)
@@ -26,3 +27,4 @@ class StatsTemporada(Base):
     faltes_contra = Column(Integer, default=0)
     rival = Column(String, default="")
     casa = Column(Boolean, default=False)
+    dorsal = Column(Integer)

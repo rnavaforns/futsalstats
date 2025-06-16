@@ -27,37 +27,37 @@ def index(request: Request):
 @app.post("/select-partido")
 def select_partido(
     request: Request,
-    partido_id: Optional[int] = Form(None),
+    jornada: Optional[int] = Form(None),
     rival: Optional[str] = Form(None),
     casa: Optional[bool] = Form(False),
     db: Session = Depends(get_db)
 ):
-    if partido_id:
-        partido = db.query(StatsTemporada).filter_by(id=partido_id).first()
+    if jornada:
+        partido = db.query(StatsTemporada).filter_by(jornada=jornada).first()
         if partido:
-            return RedirectResponse(url=f"/partido/{partido_id}", status_code=303)
+            return RedirectResponse(url=f"/partido/{jornada}", status_code=303)
 
     # Crear nuevo partido
-    nuevo = StatsTemporada(rival=rival or "", casa=casa or False)
+    nuevo = StatsTemporada(rival=rival or "", casa=casa or False, jornada=jornada, dorsal=0)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
-    return RedirectResponse(url=f"/partido/{nuevo.id}", status_code=303)
+    return RedirectResponse(url=f"/partido/{nuevo.jornada}", status_code=303)
 
-@app.get("/partido/{partido_id}")
-def view_partido(request: Request, partido_id: int, db: Session = Depends(get_db)):
-    partido = db.query(StatsTemporada).filter_by(id=partido_id).first()
-    columnas = [c.name for c in sqlalchemy.inspect(StatsTemporada).c if c.name not in ["id", "rival", "casa"]]
+@app.get("/partido/{jornada}")
+def view_partido(request: Request, jornada: int, db: Session = Depends(get_db)):
+    partido = db.query(StatsTemporada).filter_by(jornada=jornada).first()
+    columnas = [c.name for c in sqlalchemy.inspect(StatsTemporada).c if c.name not in ["jornada", "rival", "casa"]]
     return templates.TemplateResponse("partido.html", {
         "request": request,
-        "partido_id": partido_id,
+        "jornada": jornada,
         "columnas": columnas,
         "rival": partido.rival,
         "casa": "Sí" if partido.casa else "No"
     })
 
-@app.post("/partido/{partido_id}/accion/{columna}")
-def sumar_accion(partido_id: int, columna: str, db: Session = Depends(get_db)):
+@app.post("/partido/{jornada}/accion/{columna}")
+def sumar_accion(jornada: int, columna: str, db: Session = Depends(get_db)):
     partido = db.query(StatsTemporada).filter_by(id=partido_id).first()
     if partido and hasattr(partido, columna):
         valor = getattr(partido, columna) or 0
