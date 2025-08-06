@@ -58,7 +58,7 @@ def view_partido(request: Request, jornada: int, db: Session = Depends(get_db)):
 
 @app.post("/partido/{jornada}/accion/{columna}")
 def sumar_accion(jornada: int, columna: str, db: Session = Depends(get_db)):
-    partido = db.query(StatsTemporada).filter_by(id=partido_id).first()
+    partido = db.query(StatsTemporada).filter_by(jornada=jornada).first()
     if partido and hasattr(partido, columna):
         valor = getattr(partido, columna) or 0
         setattr(partido, columna, valor + 1)
@@ -91,3 +91,5 @@ def goles_temporada(request: Request, db: Session = Depends(get_db)):
         "request": request,
         "image_base64": image_base64
     })
+
+    #hola
