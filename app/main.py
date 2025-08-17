@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.database import SessionLocal
 from app.models import StatsTemporada
 import sqlalchemy
@@ -81,6 +82,26 @@ def sumar_accion(jornada: int, columna: str, dorsal: int, db: Session = Depends(
     db.commit()
     return {"ok": True}
 
+@app.post("/stats_acumulat/{columna}/{dorsales}")
+def sumar_stats_acumulat(columna: str, dorsales: str, db: Session = Depends(get_db)):
+    # Convert dorsales string to a list
+    dorsales_list = dorsales.split(",")
+
+    # Create placeholders for SQLAlchemy text query
+    placeholders = ",".join(f":d{i}" for i in range(len(dorsales_list)))
+    params = {f"d{i}": d for i, d in enumerate(dorsales_list)}
+
+    # Wrap query string in sqlalchemy.text()
+    query = text(f"UPDATE stats_acumulat SET {columna} = {columna} + 1 WHERE dorsal IN ({placeholders})")
+
+    try:
+        db.execute(query, params)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise e
+
+    return {"updated_dorsales": dorsales_list, "column": columna}
 
 @app.get("/gols")
 def goles_temporada(request: Request, db: Session = Depends(get_db)):
