@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Jornada {{ jornada }}</title>
@@ -11,31 +12,54 @@
             display: flex;
             gap: 20px;
         }
-        h1, h2 {
+
+        h1,
+        h2 {
             text-align: center;
             width: 100%;
         }
+
         .acciones {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
+            gap: 8px;
+            justify-content: flex-start;
             flex: 1;
+            align-content: flex-start;
         }
+
         .dorsales {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
+
         button {
-            padding: 10px 15px;
-            font-size: 16px;
             cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f8f8;
         }
+
+        .dorsal-button {
+            padding: 6px 10px;
+            font-size: 14px;
+            width: 40px;
+            text-align: center;
+        }
+
         .dorsal-button.selected {
             background-color: lightblue;
             font-weight: bold;
         }
+
+        .accion-button {
+            padding: 6px 10px;
+            font-size: 13px;
+            min-width: 100px;
+            white-space: nowrap;
+        }
+
         .mensaje {
             text-align: center;
             margin-top: 10px;
@@ -44,6 +68,7 @@
         }
     </style>
 </head>
+
 <body>
     <div style="width:100%">
         <h1>Jornada: {{ jornada }}</h1>
@@ -60,7 +85,9 @@
     <!-- Action buttons -->
     <div class="acciones">
         {% for columna in columnas %}
-        <button onclick="enviarAccion('{{ columna }}')">{{ columna.replace('_', ' ').capitalize() }}</button>
+        <button class="accion-button" onclick="enviarAccion('{{ columna }}')">
+            {{ columna.replace('_', ' ').capitalize() }}
+        </button>
         {% endfor %}
     </div>
 
@@ -86,13 +113,13 @@
             fetch(`/partido/{{ jornada }}/accion/${columna}/${dorsalSeleccionado}`, {
                 method: 'POST'
             })
-            .then(response => {
-                if (response.ok) {
-                    mostrarMensaje(`+1 en ${columna} (Dorsal ${dorsalSeleccionado})`);
-                } else {
-                    mostrarMensaje('Error al actualizar', true);
-                }
-            });
+                .then(response => {
+                    if (response.ok) {
+                        mostrarMensaje(`+1 en ${columna} (Dorsal ${dorsalSeleccionado})`);
+                    } else {
+                        mostrarMensaje('Error al actualizar', true);
+                    }
+                });
         }
 
         function mostrarMensaje(texto, error = false) {
@@ -105,4 +132,5 @@
         }
     </script>
 </body>
+
 </html>
