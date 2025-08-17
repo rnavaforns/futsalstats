@@ -48,9 +48,14 @@
             text-align: center;
         }
 
+        .dorsal-button.active {
+            background-color: lightgreen;
+            font-weight: bold;
+        }
+
         .dorsal-button.selected {
             background-color: lightblue;
-            font-weight: bold;
+            border: 2px solid blue;
         }
 
         .accion-button {
@@ -75,17 +80,20 @@
         <h2>Rival: {{ rival }} | Casa: {{ casa }}</h2>
     </div>
 
+    <!-- hidden partido-id -->
+    <input type="hidden" id="partido-id" value="{{ jornada }}">
+
     <!-- Column of dorsals -->
     <div class="dorsales">
         {% for d in range(1, 16) %}
-        <button class="dorsal-button" onclick="seleccionarDorsal({{ d }})">{{ d }}</button>
+        <button class="dorsal-button" data-dorsal="{{ d }}">{{ d }}</button>
         {% endfor %}
     </div>
 
     <!-- Action buttons -->
     <div class="acciones">
         {% for columna in columnas %}
-        <button class="accion-button" onclick="enviarAccion('{{ columna }}')">
+        <button class="accion-button action-button" data-action="{{ columna }}">
             {{ columna.replace('_', ' ').capitalize() }}
         </button>
         {% endfor %}
@@ -94,42 +102,95 @@
     <div class="mensaje" id="mensaje"></div>
 
     <script>
-        let dorsalSeleccionado = null;
+        document.addEventListener("DOMContentLoaded", () => {
+            const partidoId = document.getElementById("partido-id").value;
+            let activos = [];             // up to 4
+            let dorsalSeleccionado = null; // target for next action
 
-        function seleccionarDorsal(dorsal) {
-            dorsalSeleccionado = dorsal;
+            // Handle dorsal buttons
+            document.querySelectorAll(".dorsal-button").forEach(button => {
+                button.addEventListener("click", () => {
+                    const dorsal = parseInt(button.dataset.dorsal);
 
-            // Highlight selected
-            document.querySelectorAll('.dorsal-button').forEach(btn => btn.classList.remove('selected'));
-            event.target.classList.add('selected');
-        }
+                    // If already active -> deselect
+                    if (activos.includes(dorsal)) {
+                        activos = activos.filter(d => d !== dorsal);
+                        button.classList.remove("active", "selected");
+                        if (dorsalSeleccionado === dorsal) {
+                            dorsalSeleccionado = null;
+                        }
+                        return;
+                    }
 
-        function enviarAccion(columna) {
-            if (!dorsalSeleccionado) {
-                mostrarMensaje("Selecciona un dorsal primero", true);
-                return;
-            }
+                    // If not active and less than 4 -> activate
+                    if (activos.length < 4) {
+                        activos.push(dorsal);
+                        button.classList.add("active");
 
-            fetch(`/partido/{{ jornada }}/accion/${columna}/${dorsalSeleccionado}`, {
-                method: 'POST'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        mostrarMensaje(`+1 en ${columna} (Dorsal ${dorsalSeleccionado})`);
+                        // Make it the selected one automatically
+                        if (!dorsalSeleccionado) {
+                            dorsalSeleccionado = dorsal;
+                            button.classList.add("selected");
+                        }
                     } else {
-                        mostrarMensaje('Error al actualizar', true);
+                        alert("Sólo puedes tener 4 dorsales activos.");
                     }
                 });
-        }
 
-        function mostrarMensaje(texto, error = false) {
-            const mensajeDiv = document.getElementById('mensaje');
-            mensajeDiv.style.color = error ? 'red' : 'green';
-            mensajeDiv.innerText = texto;
-            setTimeout(() => {
-                mensajeDiv.innerText = '';
-            }, 2000);
-        }
+                // Right-click to set as selected (among active)
+                button.addEventListener("contextmenu", (ev) => {
+                    ev.preventDefault();
+                    const dorsal = parseInt(button.dataset.dorsal);
+                    if (!activos.includes(dorsal)) {
+                        alert("Primero marca el dorsal como activo.");
+                        return;
+                    }
+                    dorsalSeleccionado = dorsal;
+
+                    // Remove selection highlight from others
+                    document.querySelectorAll(".dorsal-button").forEach(btn => btn.classList.remove("selected"));
+                    button.classList.add("selected");
+                });
+            });
+
+            // Handle action buttons
+            document.querySelectorAll(".action-button").forEach(button => {
+                button.addEventListener("click", async () => {
+                    if (!dorsalSeleccionado) {
+                        mostrarMensaje("Selecciona un dorsal activo primero", true);
+                        return;
+                    }
+
+                    const columna = button.dataset.action;
+
+                    try {
+                        const response = await fetch(`/partido/${partidoId}/accion/${columna}/${dorsalSeleccionado}`, {
+                            method: "POST"
+                        });
+
+                        if (!response.ok) throw new Error("Error en la petición");
+
+                        const result = await response.json();
+                        if (result.ok) {
+                            mostrarMensaje(`+1 en ${columna} (Dorsal ${dorsalSeleccionado})`);
+                        }
+                    } catch (error) {
+                        console.error("Error al actualizar acción:", error);
+                        mostrarMensaje("Error al actualizar", true);
+                    }
+                });
+            });
+
+            function mostrarMensaje(texto, error = false) {
+                const mensajeDiv = document.getElementById('mensaje');
+                mensajeDiv.style.color = error ? 'red' : 'green';
+                mensajeDiv.innerText = texto;
+                setTimeout(() => {
+                    mensajeDiv.innerText = '';
+                }, 2000);
+            }
+        });
+
     </script>
 </body>
 
