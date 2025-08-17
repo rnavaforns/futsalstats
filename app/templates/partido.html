@@ -6,33 +6,58 @@
     <style>
         body {
             font-family: sans-serif;
-            max-width: 700px;
+            max-width: 900px;
             margin: auto;
+            display: flex;
+            gap: 20px;
         }
         h1, h2 {
             text-align: center;
+            width: 100%;
         }
         .acciones {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
+            flex: 1;
+        }
+        .dorsales {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
         button {
             padding: 10px 15px;
             font-size: 16px;
+            cursor: pointer;
+        }
+        .dorsal-button.selected {
+            background-color: lightblue;
+            font-weight: bold;
         }
         .mensaje {
             text-align: center;
             margin-top: 10px;
             color: green;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <h1>Jornada: {{ jornada }}</h1>
-    <h2>Rival: {{ rival }} | Casa: {{ casa }}</h2>
+    <div style="width:100%">
+        <h1>Jornada: {{ jornada }}</h1>
+        <h2>Rival: {{ rival }} | Casa: {{ casa }}</h2>
+    </div>
 
+    <!-- Column of dorsals -->
+    <div class="dorsales">
+        {% for d in range(1, 16) %}
+        <button class="dorsal-button" onclick="seleccionarDorsal({{ d }})">{{ d }}</button>
+        {% endfor %}
+    </div>
+
+    <!-- Action buttons -->
     <div class="acciones">
         {% for columna in columnas %}
         <button onclick="enviarAccion('{{ columna }}')">{{ columna.replace('_', ' ').capitalize() }}</button>
@@ -42,13 +67,28 @@
     <div class="mensaje" id="mensaje"></div>
 
     <script>
+        let dorsalSeleccionado = null;
+
+        function seleccionarDorsal(dorsal) {
+            dorsalSeleccionado = dorsal;
+
+            // Highlight selected
+            document.querySelectorAll('.dorsal-button').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+
         function enviarAccion(columna) {
-            fetch(`/partido/{{ jornada }}/accion/${columna}`, {
+            if (!dorsalSeleccionado) {
+                mostrarMensaje("Selecciona un dorsal primero", true);
+                return;
+            }
+
+            fetch(`/partido/{{ jornada }}/accion/${columna}/${dorsalSeleccionado}`, {
                 method: 'POST'
             })
             .then(response => {
                 if (response.ok) {
-                    mostrarMensaje(`+1 en ${columna}`);
+                    mostrarMensaje(`+1 en ${columna} (Dorsal ${dorsalSeleccionado})`);
                 } else {
                     mostrarMensaje('Error al actualizar', true);
                 }

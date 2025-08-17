@@ -56,14 +56,31 @@ def view_partido(request: Request, jornada: int, db: Session = Depends(get_db)):
         "casa": "Sí" if partido.casa else "No"
     })
 
-@app.post("/partido/{jornada}/accion/{columna}")
-def sumar_accion(jornada: int, columna: str, db: Session = Depends(get_db)):
-    partido = db.query(StatsTemporada).filter_by(jornada=jornada).first()
+@app.post("/partido/{jornada}/accion/{columna}/{dorsal}")
+def sumar_accion(jornada: int, columna: str, dorsal: int, db: Session = Depends(get_db)):
+    # Find existing row
+    partido = db.query(StatsTemporada).filter_by(jornada=jornada, dorsal=dorsal).first()
+
+    # If exists, increment
     if partido and hasattr(partido, columna):
         valor = getattr(partido, columna) or 0
         setattr(partido, columna, valor + 1)
-        db.commit()
+    
+    # If not exists, create new row with columna=1
+    elif hasattr(StatsTemporada, columna):
+        nuevo = StatsTemporada(
+            jornada=jornada,
+            dorsal=dorsal,
+            rival="",   # optional, fill later if needed
+            casa=False  # optional, fill later if needed
+        )
+        setattr(nuevo, columna, 1)
+        db.add(nuevo)
+        partido = nuevo
+
+    db.commit()
     return {"ok": True}
+
 
 @app.get("/gols")
 def goles_temporada(request: Request, db: Session = Depends(get_db)):
