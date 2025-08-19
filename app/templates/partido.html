@@ -169,18 +169,6 @@
                         // Show combined message
                         mostrarMensaje(`/partido: ${JSON.stringify(result1)} | /stats_acumulat: ${JSON.stringify(result2)}`);
 
-                        // Flash updated dorsales
-                        activos.forEach(d => {
-                            const btn = document.querySelector(`.dorsal-button[data-dorsal="${d}"]`);
-                            if (btn) {
-                                btn.style.transition = "background-color 0.2s";
-                                btn.style.backgroundColor = "yellow";
-                                setTimeout(() => {
-                                    btn.style.backgroundColor = d === dorsalSeleccionado ? "lightblue" : "lightgreen";
-                                }, 300);
-                            }
-                        });
-
                     } catch (error) {
                         console.error("Error al actualizar acción:", error);
                         mostrarMensaje(`Error: ${error.message}`, true);

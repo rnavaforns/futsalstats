@@ -39,7 +39,7 @@ def select_partido(
             return RedirectResponse(url=f"/partido/{jornada}", status_code=303)
 
     # Crear nuevo partido
-    nuevo = StatsTemporada(rival=rival or "", casa=casa or False, jornada=jornada, dorsal=0)
+    nuevo = StatsTemporada(rival=rival or "", casa=casa or False, jornada=jornada, dorsal=17)
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)
