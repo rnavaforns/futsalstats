@@ -1,13 +1,22 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, CHAR, ForeignKey, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+class Jugador(Base):
+    __tablename__ = "jugador"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    dorsal = Column(Integer, unique=True, default=0)
+    nom = Column(String, default="0")
+    cama_dominant = Column(CHAR, default="0")
+
+
 class StatsTemporada(Base):
     __tablename__ = "stats_temporada"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    jornada = Column(Integer)
+    dorsal = Column(Integer, ForeignKey("jugador.dorsal"), primary_key=True)
+    jornada = Column(Integer, primary_key=True)
     gol_favor = Column(Integer, default=0)
     gol_contra = Column(Integer, default=0)
     xut_fora = Column(Integer, default=0)
@@ -26,13 +35,12 @@ class StatsTemporada(Base):
     faltes_contra = Column(Integer, default=0)
     rival = Column(String, default="")
     casa = Column(Boolean, default=False)
-    dorsal = Column(Integer)
 
 
 class StatsAcumulat(Base):
     __tablename__ = "stats_acumulat"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    dorsal = Column(Integer, ForeignKey("jugador.dorsal"), primary_key=True)
     gol_favor = Column(Integer, default=0)
     gol_contra = Column(Integer, default=0)
     xut_fora = Column(Integer, default=0)
@@ -49,4 +57,3 @@ class StatsAcumulat(Base):
     recuperacio_zona_3 = Column(Integer, default=0)
     faltes_favor = Column(Integer, default=0)
     faltes_contra = Column(Integer, default=0)
-    dorsal = Column(Integer)
