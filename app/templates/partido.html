@@ -8,9 +8,12 @@
 </head>
 
 <body>
-    <div style="width:100%">
+    <div style="width:100%; text-align: center;">
         <h1>Jornada: {{ jornada }}</h1>
         <h2>Rival: {{ rival }} | Casa: {{ casa }}</h2>
+        <button style="padding: 15px;">
+            <a href="{{ url_for('statsjornada', jornada=jornada) }}" target="_blank">Veure dades del partit</a>
+        </button>
     </div>
 
     <!-- hidden partido-id -->
