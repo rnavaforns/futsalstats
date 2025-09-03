@@ -155,6 +155,44 @@ def statsjornada(request: Request, jornada: int, db: Session = Depends(get_db)):
         "jugadors": jugadors_dict  # lista con todos los jugadores y stats
     })
 
+@app.get("/statsjugador/{dorsal}")
+def statsjugador(request: Request, dorsal: int, db: Session = Depends(get_db)):
+    jornadas = db.query(StatsTemporada).filter_by(dorsal=dorsal).order_by(StatsTemporada.jornada).all()
+
+    columnas = [c.name for c in sqlalchemy.inspect(StatsTemporada).c
+                if c.name not in ["rival", "casa"]]
+
+    jornadas_dict = []
+    for j in jornadas:
+        jornadas_dict.append({col: getattr(j, col) for col in columnas})
+
+    # calcular promedios
+    n = len(jornadas)
+    promedios = {"jornada": "Media"}
+    for col in columnas:
+        if col == "jornada":
+            continue
+        try:
+            total = sum(j[col] for j in jornadas_dict if isinstance(j[col], (int, float)))
+            promedios[col] = round(total / n, 2) if n > 0 else 0
+        except Exception:
+            promedios[col] = ""
+
+    jornadas_dict.append(promedios)
+
+    # construir headers abreviados
+    columnas_formatted = [
+        {"name": col, "label": format_column_name(col)} for col in columnas
+    ]
+
+    return templates.TemplateResponse("statsjugador.html", {
+        "request": request,
+        "dorsal": dorsal,
+        "columnas": columnas_formatted,
+        "jornadas": jornadas_dict
+    })
+
+
 @app.get("/gols")
 def goles_temporada(request: Request, db: Session = Depends(get_db)):
     partidos = db.query(StatsTemporada).order_by(StatsTemporada.id).all()
