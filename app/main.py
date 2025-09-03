@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import SessionLocal
-from app.models import StatsTemporada
+from app.models import StatsTemporada, Jugador
 import sqlalchemy
 from typing import Optional
 from matplotlib.figure import Figure
@@ -52,10 +52,12 @@ def select_partido(
 def view_partido(request: Request, jornada: int, db: Session = Depends(get_db)):
     partido = db.query(StatsTemporada).filter_by(jornada=jornada).first()
     columnas = [c.name for c in sqlalchemy.inspect(StatsTemporada).c if c.name not in ["jornada", "rival", "casa"]]
+    dorsales = [row.dorsal for row in db.query(Jugador.dorsal).all()]
     return templates.TemplateResponse("partido.html", {
         "request": request,
         "jornada": jornada,
         "columnas": columnas,
+        "dorsales": dorsales,
         "rival": partido.rival,
         "casa": "Sí" if partido.casa else "No"
     })
