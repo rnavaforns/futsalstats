@@ -70,13 +70,12 @@ def sumar_accion(jornada: int, columna: str, dorsal: int, db: Session = Depends(
         valor = getattr(partido, columna) or 0
         setattr(partido, columna, valor + 1)
     
-    # If not exists, create new row with columna=1
     elif hasattr(StatsTemporada, columna):
         nuevo = StatsTemporada(
             jornada=jornada,
             dorsal=dorsal,
-            rival="",   # optional, fill later if needed
-            casa=False  # optional, fill later if needed
+            rival="",
+            casa=False 
         )
         setattr(nuevo, columna, 1)
         db.add(nuevo)
@@ -105,6 +104,54 @@ def sumar_stats_acumulat(columna: str, dorsales: str, db: Session = Depends(get_
         raise e
 
     return {"updated_dorsales": dorsales_list, "column": columna}
+
+def format_column_name(col: str) -> str:
+    # Reemplazar _ por espacio
+    parts = col.replace("_", " ").split()
+    formatted = []
+    for p in parts:
+        if p.isdigit():  # números tal cual
+            formatted.append(p)
+        else:  # texto → primeras 3 letras mayúsculas
+            formatted.append(p[:3].upper())
+    return " ".join(formatted)
+
+@app.get("/statsjornada/{jornada}")
+def statsjornada(request: Request, jornada: int, db: Session = Depends(get_db)):
+    jugadors = db.query(StatsTemporada).filter_by(jornada=jornada).order_by(StatsTemporada.dorsal).all()
+
+    columnas = [c.name for c in sqlalchemy.inspect(StatsTemporada).c
+                if c.name not in ["jornada", "rival", "casa"]]
+
+    jugadors_dict = []
+    for j in jugadors:
+        jugadors_dict.append({col: getattr(j, col) for col in columnas + ["dorsal"]})
+
+    jugadors_info = jugadors[0]
+
+    totals = {"dorsal": "Equip"}
+    for col in columnas:
+        if col == "dorsal":
+            continue
+        try:
+            totals[col] = sum(j[col] for j in jugadors_dict if isinstance(j[col], (int, float)))
+        except Exception:
+            totals[col] = ""
+
+    jugadors_dict.append(totals)
+
+    columnas_formatted = [
+        {"name": col, "label": format_column_name(col)} for col in columnas
+    ]
+
+    return templates.TemplateResponse("statsjornada.html", {
+        "request": request,
+        "jornada": jornada,
+        "columnas": columnas_formatted,
+        "rival": jugadors_info.rival,
+        "casa": "Sí" if jugadors_info.casa else "No",
+        "jugadors": jugadors_dict  # lista con todos los jugadores y stats
+    })
 
 @app.get("/gols")
 def goles_temporada(request: Request, db: Session = Depends(get_db)):
