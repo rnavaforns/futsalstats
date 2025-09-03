@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Jornada {{ jornada }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/statsjornada.css') }}">
+</head>
+
+<body>
+    <p>Rival: {{ rival }} | Casa: {{ casa }}</p>
+
+    <table>
+        <thead>
+            <tr>
+                {% for col in columnas %}
+                <th>{{ col.label }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for j in jugadors %}
+            <tr class="{% if j['dorsal'] == 'Equip' %}totals-row{% endif %}">
+                {% for col in columnas %}
+                <td>{{ j[col.name] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script src="{{ url_for('static', path='/js/statsjornada.js') }}"></script>
+</body>
+
+</html>

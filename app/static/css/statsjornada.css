@@ -1,0 +1,50 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+thead th {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+}
+
+tbody td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+/* Filas striped */
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+/* Hover en filas */
+tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Botón de ordenar dentro del header */
+.sort-btn {
+    background: none;
+    border: none;
+    color: white;
+    margin-left: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.totals-row td {
+    font-weight: bold;
+    background-color: #e0e0e0;
+}
