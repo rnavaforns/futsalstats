@@ -64,6 +64,9 @@ def view_partido(request: Request, jornada: int, db: Session = Depends(get_db)):
 
 @app.post("/partido/{jornada}/accion/{columna}/{dorsal}")
 def sumar_accion(jornada: int, columna: str, dorsal: int, db: Session = Depends(get_db)):
+    if( columna in ["gol_contra", "xut_porta_contra", "xut_fora_contra", "corner", "corner_contra", "falta_favor"] ):
+        dorsal = 0
+
     # Find existing row
     partido = db.query(StatsTemporada).filter_by(jornada=jornada, dorsal=dorsal).first()
 
