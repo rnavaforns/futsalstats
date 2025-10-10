@@ -27,13 +27,27 @@
     </div>
 
     <!-- Action buttons -->
+   <div class="acciones-container" style="display: flex; gap: 2rem;">
+    <!-- Columna ofensiva -->
     <div class="acciones">
-        {% for columna in columnas %}
+        <h3>Acciones Ofensivas</h3>
+        {% for columna in columnas_ofensivas %}
         <button class="accion-button action-button" data-action="{{ columna }}">
             {{ columna.replace('_', ' ').capitalize() }}
         </button>
         {% endfor %}
     </div>
+
+    <!-- Columna defensiva -->
+    <div class="acciones">
+        <h3>Acciones Defensivas</h3>
+        {% for columna in columnas_defensivas %}
+        <button class="accion-button action-button" data-action="{{ columna }}">
+            {{ columna.replace('_', ' ').capitalize() }}
+        </button>
+        {% endfor %}
+    </div>
+</div>
 
     <div class="mensaje" id="mensaje"></div>
 

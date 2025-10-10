@@ -53,12 +53,28 @@ def select_partido(
 @app.get("/partido/{jornada}")
 def view_partido(request: Request, jornada: int, db: Session = Depends(get_db)):
     partido = db.query(StatsTemporada).filter_by(jornada=jornada).first()
+
+    ofensivas_keywords = ["gol_favor", "xut_fora", "xut_porta", "corner", "perdua_zona_1", "perdua_zona_2", "perdua_zona_3", "faltes_favor", "xut_favor_interceptat", "assistencia", "disputa_perduda", "disputa_guanyada", "doble_favor_marcat", "corner_marcat", "corner_no_marcat", "corner_no_finalitzat", "regat_favor"]
+    defensivas_keywords = ["gol_contra", "xut_fora_contra", "xut_porta_contra", "corner_contra", "recuperacio_zona_1", "recuperacio_zona_2", "recuperacio_zona_3", "faltes_contra", "aturades", "passe_interceptat", "xut_contra_interceptat", "doble_enncaixat", "doble_aturat", "regat_contra"]
+
+    columnas_ofensivas = []
+    columnas_defensivas = []
+
     columnas = [c.name for c in sqlalchemy.inspect(StatsTemporada).c if c.name not in ["jornada", "rival", "casa"]]
+    for col in columnas:
+        if any(k in col.lower() for k in ofensivas_keywords):
+           columnas_ofensivas.append(col)
+        elif any(k in col.lower() for k in defensivas_keywords):
+            columnas_defensivas.append(col)
+        else:
+            columnas_defensivas.append(col)
+
     dorsales = [row.dorsal for row in db.query(Jugador.dorsal).all()]
     return templates.TemplateResponse("partido.html", {
         "request": request,
         "jornada": jornada,
-        "columnas": columnas,
+        "columnas_ofensivas": columnas_ofensivas,
+        "columnas_defensivas": columnas_defensivas,
         "dorsales": dorsales,
         "rival": partido.rival,
         "casa": "Sí" if partido.casa else "No"
