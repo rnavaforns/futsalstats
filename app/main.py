@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Form, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi import Response
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import SessionLocal
@@ -11,6 +12,7 @@ from typing import Optional
 from matplotlib.figure import Figure
 import io
 import base64
+import csv
 
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
@@ -130,6 +132,8 @@ def statsjornada(request: Request, jornada: int, db: Session = Depends(get_db)):
 
     jugadors_dict = []
     for j in jugadors:
+        if j.dorsal == 0:
+            continue  # saltar fila dorsal 0
         jugadors_dict.append({col: getattr(j, col) for col in columnas + ["dorsal"]})
 
     jugadors_info = jugadors[0]
@@ -223,4 +227,42 @@ def goles_temporada(request: Request, db: Session = Depends(get_db)):
         "image_base64": image_base64
     })
 
-    #hola
+@app.get("/statsjornada_csv/{jornada}")
+def statsjornada_csv(jornada: int, db: Session = Depends(get_db)):
+    # Obtener los datos igual que antes
+    jugadors = db.query(StatsTemporada).filter_by(jornada=jornada).order_by(StatsTemporada.dorsal).all()
+
+    columnas = [c.name for c in sqlalchemy.inspect(StatsTemporada).c
+                if c.name not in ["jornada", "rival", "casa"]]
+
+    jugadors_dict = []
+    for j in jugadors:
+        jugadors_dict.append({col: getattr(j, col) for col in columnas + ["dorsal"]})
+
+    # Calcular totales
+    totals = {"dorsal": "Equip"}
+    for col in columnas:
+        if col == "dorsal":
+            continue
+        try:
+            totals[col] = sum(j[col] for j in jugadors_dict if isinstance(j[col], (int, float)))
+        except Exception:
+            totals[col] = ""
+
+    jugadors_dict.append(totals)
+
+    # Generar CSV en memoria
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=["dorsal"] + columnas)
+    writer.writeheader()
+    writer.writerows(jugadors_dict)
+
+    # Crear respuesta
+    response = Response(
+        content=output.getvalue(),
+        media_type="text/csv"
+    )
+    response.headers["Content-Disposition"] = f"attachment; filename=stats_jornada_{jornada}.csv"
+
+    return response
+

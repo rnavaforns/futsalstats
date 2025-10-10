@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            if (activos.length < 4) {
+            if (activos.length < 5) {
                 activos.push(dorsal);
                 button.classList.add("active");
                 if (!dorsalSeleccionado) {
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     button.classList.add("selected");
                 }
             } else {
-                alert("Sólo puedes tener 4 dorsales activos.");
+                alert("Sólo puedes tener 5 dorsales activos.");
             }
         });
 
